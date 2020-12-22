@@ -17,7 +17,7 @@ Projects developed by the Ultrapowa Development Team include:
 * Ultrapower Key maker      (UKG)
 * Ultrapowa Client Patcher  (UCP)
 
-##Websites
+## Websites
 
 ~~* [Ultrapowa - Home Page]~(http://ultrapowa.com/)~~
 
@@ -25,7 +25,7 @@ Projects developed by the Ultrapowa Development Team include:
 
 They have gone private with node.js and are no longer supporting C# versions of the server
 
-##Patched Versions
+## Patched Versions
 
 ~~* [Clash of Clans - Patched APK - v8.551.24]~(https://www.mediafire.com/?wgl58x1x0a0wn88)~~
 
