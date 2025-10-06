@@ -32,4 +32,3 @@ They have gone private with node.js and are no longer supporting C# versions of 
 Provided in the release section
 =======
 * Ultrapowa Client Patcher  (UCP) : fixed some issues
->>>>>>> develop
