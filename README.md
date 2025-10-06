@@ -1,6 +1,8 @@
-This Project is NOT affiliated with Supercell, or any other company.
+Home-Repository of this fork: https://github.com/ogclash/ultrapower-clash-server
+
 
 # Projects
+This Project is NOT affiliated with Supercell, or any other company.
 The original Project was developed by the Ultrapowa Development Team:  
 
 * Ultrapowa Clash Server   (UCS) : heavily modified  
