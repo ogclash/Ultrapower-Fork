@@ -1,11 +1,11 @@
 using System;
-using System.IO;
 using UCS.Core;
 using UCS.Core.Network;
-using UCS.Helpers;
 using UCS.Logic;
 using UCS.Packets.Messages.Server;
 using UCS.Helpers.Binary;
+using UCS.Packets.Messages.Server.Support;
+
 namespace UCS.Packets.Messages.Client
 {
     // Packet 14113
@@ -28,9 +28,12 @@ namespace UCS.Packets.Messages.Client
             {
                 Level targetLevel = await ResourcesManager.GetPlayer(AvatarId);
                 targetLevel.Tick();
-                new VisitedHomeDataMessage(Device, targetLevel, this.Device.Player).Send();
-
-
+                if (this.Device.Player.Avatar.minorversion >= 709)
+                    new VisitedHomeDataMessage(Device, targetLevel, this.Device.Player).Send();
+                else
+                    new VisitedHomeDataForOldClients(Device, targetLevel, this.Device.Player).Send();
+                
+                Logger.Say($"{this.Device.Player.Avatar.AvatarName} [{this.Device.Player.Avatar.UserId}] visits {targetLevel.Avatar.AvatarName} [{targetLevel.Avatar.UserId}]");
                 if (this.Device.Player.Avatar.AllianceId > 0)
                 {
                     Alliance alliance = ObjectManager.GetAlliance(this.Device.Player.Avatar.AllianceId);
@@ -38,6 +41,8 @@ namespace UCS.Packets.Messages.Client
                     {
                         new AllianceStreamMessage(Device, alliance).Send();
                     }
+                    
+                    this.Device.Player.Avatar.SendCLanMessagesToOldClient(this.Device);
                 }
             }
             catch (Exception)

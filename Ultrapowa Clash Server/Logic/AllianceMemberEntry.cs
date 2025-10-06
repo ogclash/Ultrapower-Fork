@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.IO;
 using Newtonsoft.Json.Linq;
 using UCS.Core;
-using UCS.Helpers;
 using System.Threading.Tasks;
 using UCS.Helpers.Binary;
 using UCS.Helpers.List;
@@ -94,12 +92,14 @@ namespace UCS.Logic
         {
             AvatarId = jsonObject["avatar_id"].ToObject<long>();
             Role = jsonObject["role"].ToObject<int>();
+            WarOptInStatus = jsonObject["war_opt_in"].ToObject<int>() == 1 ? 1 : 0;
         }
 
         public JObject Save(JObject jsonObject)
         {
             jsonObject.Add("avatar_id", AvatarId);
             jsonObject.Add("role", Role);
+            jsonObject.Add("war_opt_in", WarOptInStatus);
             return jsonObject;
         }
 

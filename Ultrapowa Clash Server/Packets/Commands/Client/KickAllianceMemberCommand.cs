@@ -1,14 +1,11 @@
 using System;
-using System.IO;
 using UCS.Core;
 using UCS.Core.Network;
-using UCS.Helpers;
 using UCS.Logic;
 using UCS.Logic.AvatarStreamEntry;
 using UCS.Logic.StreamEntry;
 using UCS.Packets.Messages.Server;
 using UCS.Packets.Commands.Server;
-using System.Threading.Tasks;
 using UCS.Helpers.Binary;
 
 namespace UCS.Packets.Commands.Client
@@ -65,6 +62,7 @@ namespace UCS.Packets.Commands.Client
                                 kickOutStreamEntry.SetMessage(m_vMessage);
 
                                 var p = new AvatarStreamEntryMessage(targetAccount.Client);
+                                p.SetTargetAcc(targetAccount);
                                 p.SetAvatarStreamEntry(kickOutStreamEntry);
                                 p.Send();
                             }

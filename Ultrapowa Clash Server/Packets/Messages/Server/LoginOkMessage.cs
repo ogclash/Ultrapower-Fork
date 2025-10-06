@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UCS.Core.Crypto;
-using UCS.Helpers;
 using UCS.Helpers.List;
 using UCS.Logic;
 using UCS.Logic.API;
@@ -34,7 +31,7 @@ namespace UCS.Packets.Messages.Server
 
             this.Data.AddString(avatar.UserToken);
 
-            this.Data.AddString(avatar.FacebookId);
+            this.Data.AddString(null);
             this.Data.AddString(null);
 
 
@@ -54,7 +51,7 @@ namespace UCS.Packets.Messages.Server
             this.Data.AddString("1482952262000"); // 14 78 03 95 03 10 0
 
             this.Data.AddInt(0);
-            this.Data.AddString(avatar.GoogleId);
+            this.Data.AddString(null);
             this.Data.AddString(avatar.Region.ToUpper());
             this.Data.AddString(null);
             this.Data.AddInt(1);

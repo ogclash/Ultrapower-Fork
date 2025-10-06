@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UCS.Core;
 using UCS.Files.Logic;
 
@@ -227,9 +224,11 @@ namespace UCS.Helpers.Binary
             return _Buffer;
         }
 
-        internal Data ReadDataReference()
+        internal Data ReadDataReference(int id = 0)
         {
-            return CSVManager.DataTables.GetDataById(this.ReadInt32());
+            if (id == 0)
+                return CSVManager.DataTables.GetDataById(this.ReadInt32());
+            return CSVManager.DataTables.GetDataById(id);
         }
 
         /// <summary>

@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using UCS.Core;
-using UCS.Helpers;
 using UCS.Packets.Commands;
 using UCS.Packets.Commands.Client;
 
@@ -60,23 +57,30 @@ namespace UCS.Packets
                 {541, typeof(SpeedUpRequestUnitsCommand)},
                 {543, typeof(KickAllianceMemberCommand)},
                 {544, typeof(GetVillageLayoutsCommand)},
+                {545, typeof(RearmTrapCommand)},
                 {546, typeof(EditVillageLayoutCommand)},
                 {549, typeof(UpgradeMultipleBuildingsCommand)},
                 {550, typeof(RemoveUnitsCommand)},
+                {548, typeof(SaveVillageLayoutCommand)},
                 {552, typeof(SaveVillageLayoutCommand)},
                 {553, typeof(ClientServerTickCommand)},
                 {554, typeof(RotateDefenseCommand)},
+                {556, typeof(MoveWholeLayoutCommand)},
                 {558, typeof(AddQuicKTrainingTroopCommand)},
                 {559, typeof(TrainQuickUnitsCommand)},
                 {560, typeof(StartClanWarCommand)},
+                {563, typeof(CollectClanResourcesCommand)},
                 {567, typeof(SetActiveVillageLayoutCommand)},
                 {568, typeof(CopyVillageLayoutCommand)},
+                {569, typeof(RemoveAllBuildingsFromLayoutCommand)},
                 {570, typeof(TogglePlayerWarStateCommand)},
                 {571, typeof(FilterChatCommand)},
                 {572, typeof(ToggleHeroAttackModeCommand)},
+                {573, typeof(DecreaseShieldTimeInfo)},
                 {574, typeof(ChallangeCommand)},
                 {577, typeof(MoveBuildingsCommand)},
                 {584, typeof(BoostBarracksCommand)},
+                {585, typeof(LockUnitProductionCommand)},
                 {586, typeof(RenameQuickTrainCommand)},
                 {590, typeof(EventsSeenCommand)},
                 {600, typeof(PlaceAttackerCommand)},
@@ -86,15 +90,10 @@ namespace UCS.Packets
                 {605, typeof(PlaceHeroCommand)},
                 {700, typeof(SearchOpponentCommand)}
             };
-
-            //Commands.Add(0, typeof(UnknownCommand));
-            //Commands.Add(1, typeof(JoinAlliance));
-            //Commands.Add(2, typeof(LeaveAllianceCommand));
-            //Commands.Add(3, typeof(ChangeAvatarCommand));
-            //Commands.Add(5, typeof());
-            //Commands.Add(551, typeof(ContinueBarrackBoostCommand));
-            //Commands.Add(563, typeof(CollectClanResourcesCommand));
-            //Commands.Add(573, typeof(RemoveShieldToAttackCommand));
+            
+            Commands.Add(579, typeof(UnknownCommand));
+            
+            Commands.Add(404, typeof(UnknownCommand));
         }
     }
 }

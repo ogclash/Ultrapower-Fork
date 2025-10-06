@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using UCS.Helpers;
 using UCS.Logic.DataSlots;
-using UCS.Files.Logic;
-using UCS.Core;
 using UCS.Helpers.List;
 
 namespace UCS.Logic.StreamEntry
@@ -49,6 +46,16 @@ namespace UCS.Logic.StreamEntry
             data.AddInt(m_vSenderRole);
             data.AddInt(GetAgeSeconds());
             return data.ToArray();
+        }
+
+        public string getMessage()
+        {
+            return Message;
+        }
+        
+        public void setMessage(string input)
+        {
+            Message = input;
         }
 
         public int GetAgeSeconds() => (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds -

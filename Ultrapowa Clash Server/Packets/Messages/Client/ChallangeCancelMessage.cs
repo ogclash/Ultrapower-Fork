@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UCS.Core;
 using UCS.Core.Network;
 using UCS.Helpers.Binary;
@@ -18,28 +14,23 @@ namespace UCS.Packets.Messages.Client
         {
         }
 
-        internal async void Process()
+        internal override async void Process()
         {
             try
             {
-                Alliance a = ObjectManager.GetAlliance(this.Device.Player.Avatar.AllianceId);
-                StreamEntry s = a.m_vChatMessages.Find(c => c.SenderID == this.Device.Player.Avatar.AllianceId && c.GetStreamEntryType() == 12);
-
-                if (s != null)
+                Alliance alliance = ObjectManager.GetAlliance(this.Device.Player.Avatar.AllianceId);
+                StreamEntry oldmessage = alliance.m_vChatMessages.Find(c => c.GetStreamEntryType() == 12);
+                alliance.m_vChatMessages.Remove(oldmessage);
+                foreach (AllianceMemberEntry op in alliance.GetAllianceMembers())
                 {
-                    a.m_vChatMessages.RemoveAll(t => t == s);
-                    foreach (AllianceMemberEntry op in a.GetAllianceMembers())
+                    Level aplayer = await ResourcesManager.GetPlayer(op.AvatarId);
+                    if (aplayer.Client != null)
                     {
-                        Level player = await ResourcesManager.GetPlayer(op.AvatarId);
-                        if (player.Client != null)
+                        if (oldmessage != null)
                         {
-                            new AllianceStreamEntryRemovedMessage(Device, s.ID).Send();
+                            new AllianceStreamEntryRemovedMessage(aplayer.Client, oldmessage.ID).Send();
                         }
                     }
-                }
-                else
-                {
-                    new OutOfSyncMessage(this.Device).Send();
                 }
             } catch (Exception) { }
         }

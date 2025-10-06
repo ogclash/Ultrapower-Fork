@@ -1,9 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UCS.Core;
 using UCS.Core.Network;
-using UCS.Helpers;
 using UCS.Helpers.List;
 using UCS.Logic;
 using UCS.Logic.StreamEntry;
@@ -21,8 +18,24 @@ namespace UCS.Packets.Messages.Server
             m_vAlliance = alliance;
         }
 
-        internal override void Encode()
+        internal override async void Encode()
         {
+            StreamEntry oldmessage =  m_vAlliance.m_vChatMessages.Find(c => c.GetStreamEntryType() == 12);
+            if (m_vAlliance.m_vChatMessages .Count() != 0 && oldmessage !=  m_vAlliance.m_vChatMessages.Last())
+            {
+                m_vAlliance.m_vChatMessages.Remove(oldmessage);
+                foreach (AllianceMemberEntry op in m_vAlliance.GetAllianceMembers())
+                {
+                    Level aplayer = await ResourcesManager.GetPlayer(op.AvatarId);
+                    if (aplayer.Client != null)
+                    {
+                        if (oldmessage != null)
+                        {
+                            new AllianceStreamEntryRemovedMessage(aplayer.Client, oldmessage.ID).Send();
+                        }
+                    }
+                }
+            }
             var chatMessages = m_vAlliance.m_vChatMessages.ToList();
             this.Data.AddInt(0);
             this.Data.AddInt(chatMessages.Count);

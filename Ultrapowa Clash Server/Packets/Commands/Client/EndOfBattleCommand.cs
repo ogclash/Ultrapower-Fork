@@ -1,5 +1,4 @@
 ﻿using UCS.Helpers.Binary;
-using UCS.Logic;
 
 namespace UCS.Packets.Commands.Client
 {
@@ -9,5 +8,19 @@ namespace UCS.Packets.Commands.Client
         public EndOfBattleCommand(Reader reader, Device client, int id) : base(reader, client, id)
         {
         }
+        
+        internal override void Decode()
+        {
+            /*
+            var unknown = this.Reader.ReadInt16();
+            var unknown1 = this.Reader.ReadInt32();
+            var unknown2 = this.Reader.ReadInt32();
+            var unknown3 = this.Reader.ReadInt32();
+            var unknown4 = this.Reader.ReadInt32();
+            var unknown5 = this.Reader.ReadInt32();
+            */
+
+        }
+        
     }
 }

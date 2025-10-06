@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json.Linq;
 using UCS.Files.Logic;
 using UCS.Helpers.Binary;
 using UCS.Logic;
@@ -26,16 +28,66 @@ namespace UCS.Packets.Commands.Client
 
         internal override void Process()
         {
-            if (this.Device.PlayerState == State.IN_BATTLE)
+            this.Device.PlayerState = State.IN_BATTLE;
+            if (this.Device.AttackInfo == null)
             {
-                List<DataSlot> _PlayerUnits = this.Device.Player.Avatar.GetUnits();
+                this.Device.AttackInfo = "multiplayer";
+            }
 
-                DataSlot _DataSlot = _PlayerUnits.Find(t => t.Data.GetGlobalID() == Unit.GetGlobalID());
-                if (_DataSlot != null)
+            if (this.Device.AttackInfo == "challenge")
+            {
+                return;
+            }
+            if (this.Device.AttackInfo == "npc")
+            {
+                this.Device.NpcAttacked = true;
+            }
+
+            bool found = false;
+
+            foreach (JArray unit in this.Device.Player.Avatar.battle.units.ToList())
+            {
+                int currentUnitId = (int)unit[0];
+                int currentCount = (int)unit[1];
+
+                if (currentUnitId == UnitID)
                 {
-                    _DataSlot.Value = _DataSlot.Value - 1;
+                    // increment unit count
+                    unit[1] = currentCount + 1;
+                    found = true;
+                    break;
                 }
             }
+
+            if (!found)
+            {
+                // add new unit if not found
+                JArray unitInfo = new JArray
+                {
+                    UnitID,
+                    1
+                };
+                this.Device.Player.Avatar.battle.units.Add(unitInfo);
+                
+                JArray unitLevel = new JArray
+                {
+                    UnitID,
+                    this.Device.Player.Avatar.GetUnitUpgradeLevel(Unit)
+                };
+                this.Device.Player.Avatar.battle.levels.Add(unitLevel);
+            }
+            
+            List<DataSlot> _PlayerUnits = this.Device.Player.Avatar.GetUnits();
+
+            DataSlot _DataSlot = _PlayerUnits.Find(t => t.Data.GetGlobalID() == Unit.GetGlobalID());
+            if (_DataSlot != null)
+            {
+                if (_DataSlot.Value < 0)
+                    _DataSlot.Value = 0;
+                else
+                    _DataSlot.Value--;
+            }
+            
         }
 
         public CombatItemData Unit;

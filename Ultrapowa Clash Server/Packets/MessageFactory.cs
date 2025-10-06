@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using UCS.Core;
-using UCS.Helpers;
-using UCS.Packets.Messages.Client;
 using UCS.Packets.Messages.Client;
 
 namespace UCS.Packets
@@ -18,6 +14,7 @@ namespace UCS.Packets
             {
                 {10100, typeof(SessionRequest)},
                 {10101, typeof(LoginMessage)},
+                {15004, typeof(WatchAttackMessage)},
                 {10105, typeof(AskForFriendListMessage)},
                 {10108, typeof(KeepAliveMessage)},
                 {10117, typeof(ReportPlayerMessage)},
@@ -49,6 +46,8 @@ namespace UCS.Packets
                 {14317, typeof(JoinRequestAllianceMessage)},
                 {14321, typeof(TakeDecisionJoinRequestMessage)},
                 {14322, typeof(AllianceInviteMessage)},
+                {14323, typeof(AcceptInviteMessage)},
+                {14418, typeof(DeclineInviteMessage)},
                 {14324, typeof(SearchAlliancesMessage)},
                 {14325, typeof(AskForAvatarProfileMessage)},
                 {14331, typeof(AskForAllianceWarDataMessage)},

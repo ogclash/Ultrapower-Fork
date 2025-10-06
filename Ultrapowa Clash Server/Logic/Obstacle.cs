@@ -6,14 +6,15 @@ using UCS.Files.Logic;
 
 namespace UCS.Logic
 {
-	internal class Obstacle //: GameObject
+	internal class Obstacle : GameObject
 	{
-		/*private readonly Level m_vLevel;
+		private readonly Level m_vLevel;
 
-		private Timer m_vTimer;
+		public Timer m_vTimer;
 
 		public Obstacle(Data data, Level l) : base(data, l)
 		{
+			AddComponent(new ObstacleComponent(this));
 			m_vLevel = l;
 		}
 
@@ -21,8 +22,8 @@ namespace UCS.Logic
 
 		public void CancelClearing()
 		{
-			m_vLevel.WorkerManager.DeallocateWorker(this);
 			m_vTimer = null;
+			m_vLevel.WorkerManager.DeallocateWorker(this);
 			var od = GetObstacleData();
 			var rd = od.GetClearingResource();
 			var cost = od.ClearCost;
@@ -34,16 +35,19 @@ namespace UCS.Logic
 			m_vLevel.GameObjectManager.GetObstacleManager().IncreaseObstacleClearCount();
 			m_vLevel.WorkerManager.DeallocateWorker(this);
 			m_vTimer = null;
+            Avatar.GameObjectManager.RemoveObstalce(this);
+			LootObstacle();
+		}
+
+		public void LootObstacle()
+		{
 			var constructionTime = GetObstacleData().ClearTimeSeconds;
-            var exp = (int)Math.Sqrt(constructionTime);
-
-            Avatar.Avatar.AddExperience(exp);
-
+			var exp = (int)Math.Sqrt(constructionTime);
+			Avatar.Avatar.AddExperience(exp);
+			
 			var rd = CSVManager.DataTables.GetResourceByName(GetObstacleData().LootResource);
-
+			var count = GetObstacleData().LootCount;
 			Avatar.Avatar.CommodityCountChangeHelper(0, rd, GetObstacleData().LootCount);
-
-			Avatar.GameObjectManager.RemoveGameObject(this);
 		}
 
         public ObstacleData GetObstacleData() => (ObstacleData)GetData();
@@ -70,15 +74,16 @@ namespace UCS.Logic
 
 		public void StartClearing()
 		{
-			var constructionTime = GetObstacleData().ClearTimeSeconds;
+			double constructionTime = GetObstacleData().ClearTimeSeconds-0.5;
 			if (constructionTime < 1)
 			{
 				ClearingFinished();
 			}
 			else
 			{
+				//Avatar.GameObjectManager.RemoveObstacle(this);
 				m_vTimer = new Timer();
-				m_vTimer.StartTimer(constructionTime, m_vLevel.Avatar.LastTickSaved);
+				m_vTimer.StartTimerDouble(constructionTime, m_vLevel.Avatar.LastTickSaved);
 				m_vLevel.WorkerManager.AllocateWorker(this);
 			}
 		}
@@ -87,9 +92,23 @@ namespace UCS.Logic
 		{
 			if (IsClearingOnGoing())
 			{
-				if (m_vTimer.GetRemainingSeconds(m_vLevel.Avatar.LastTickSaved) <= 0)
+				if (m_vTimer.GetRemainingSecondsDouble(m_vLevel.Avatar.LastTickSaved) <= 0)
 					ClearingFinished();
 			}
+		}
+
+		public new void Load(JObject jsonObject)
+		{
+			m_vLevel.WorkerManager.DeallocateWorker(this);
+			var constTimeToken = jsonObject["clear_t"];
+			if (constTimeToken != null)
+			{
+				m_vTimer = new Timer();
+				var remainingConstructionTime = constTimeToken.ToObject<int>();
+				m_vTimer.StartTimer(remainingConstructionTime, m_vLevel.Avatar.LastTickSaved);
+				m_vLevel.WorkerManager.AllocateWorker(this);
+			}
+			base.Load(jsonObject);
 		}
 
 		public JObject ToJson()
@@ -97,10 +116,10 @@ namespace UCS.Logic
 			var jsonObject = new JObject();
 			jsonObject.Add("data", GetObstacleData().GetGlobalID());
 			if (IsClearingOnGoing())
-				jsonObject.Add("const_t", m_vTimer.GetRemainingSeconds(m_vLevel.Avatar.LastTickSaved));
+				jsonObject.Add("clear_t", m_vTimer.GetRemainingSecondsDouble(m_vLevel.Avatar.LastTickSaved));
 			jsonObject.Add("x", X);
 			jsonObject.Add("y", Y);
 			return jsonObject;
-		} */
+		}
 	}
 }

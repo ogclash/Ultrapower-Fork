@@ -3,10 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using UCS.Core.Network;
-using UCS.Core.Threading;
 using UCS.Helpers;
 using UCS.Logic;
 using UCS.Packets;
@@ -76,6 +74,32 @@ namespace UCS.Core
             }
         }
 
+        public static async void loadAllResources()
+        {
+            var allAccounts = await Resources.DatabaseManager.GetAllAccountsFromDb();
+            var allAlliances = await Resources.DatabaseManager.GetAllAlliancesFromDbAsync();
+            foreach(var account in allAccounts)
+            {
+                if (account.Avatar.m_vCastleLevel == -1 && account.Avatar.TutorialStepsCount < 10)
+                {
+                    continue;
+                }
+                if (account.Avatar.AvatarName != "NoNameYet")
+                {
+                    LoadLevel(account);
+                }
+            }
+
+            foreach(var alliance in allAlliances)
+            {
+                if (alliance.m_vAllianceMembers.Count() != 0)
+                {
+                    AddAllianceInMemory(alliance);
+                }
+
+            }
+        }
+
         public static List<long> GetAllPlayerIds() => m_vDatabase.GetAllPlayerIds();
 
         public static Device GetClient(IntPtr socketHandle) => m_vClients.ContainsKey(socketHandle) ? m_vClients[socketHandle] : null;
@@ -98,8 +122,14 @@ namespace UCS.Core
 
         public static void DisconnectClient(Device _Client)
         {
-            Processor.Send(new OutOfSyncMessage(_Client));
-            DropClient(_Client.SocketHandle);
+            if (_Client != null)
+            {
+                //Resources.DatabaseManager.Save(_Client.Player);
+                if (_Client.Player.Client != null)
+                    _Client.Player.Client = null;
+                Processor.Send(new OutOfSyncMessage(_Client));
+                DropClient(_Client.SocketHandle);
+            }
         }
 
         public static bool IsClientConnected(IntPtr socketHandle) => m_vClients[socketHandle] != null && m_vClients[socketHandle].IsClientSocketConnected();
@@ -133,8 +163,18 @@ namespace UCS.Core
         {
             Resources.DatabaseManager.Save(level);
             m_vOnlinePlayers.Remove(level);
-            m_vInMemoryLevels.TryRemove(level.Avatar.UserId);
+            //m_vInMemoryLevels.TryRemove(level.Avatar.UserId);
             m_vClients.TryRemove(level.Client.SocketHandle);
+            Program.TitleD();
+        }
+        
+        public static void reloadPlayer(Level level)
+        {
+            Resources.DatabaseManager.Save(level);
+            m_vOnlinePlayers.Remove(level);
+            m_vInMemoryLevels.TryRemove(level.Avatar.UserId);
+            if (level.Client != null)
+                m_vClients.TryRemove(level.Client.SocketHandle);
             Program.TitleD();
         }
 
@@ -169,7 +209,7 @@ namespace UCS.Core
 
         public static void RemoveAllianceFromMemory(long key)
         {
-            m_vInMemoryAlliances.TryRemove(key);
+           // m_vInMemoryAlliances.TryRemove(key);
         }
 
         public static void SetGameObject(Level level, string json)

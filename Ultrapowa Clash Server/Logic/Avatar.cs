@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UCS.Core;
 using UCS.Files.Logic;
 
 namespace UCS.Logic
@@ -30,7 +29,7 @@ namespace UCS.Logic
         protected List<DataSlot> m_vUnitCount;
         protected List<DataSlot> m_vUnitUpgradeLevel;
 
-        int m_vCastleLevel = -1;
+        public int m_vCastleLevel = -1;
         int m_vCastleTotalCapacity;
         int m_vCastleUsedCapacity;
         internal int m_vTownHallLevel;
@@ -118,6 +117,11 @@ namespace UCS.Logic
         }
 
         public List<DataSlot> GetUnits() => m_vUnitCount;
+
+        public void SetUnits(List<DataSlot> units)
+        {
+            m_vUnitCount = units;
+        }
 
         public int GetUnitUpgradeLevel(CombatItemData cd)
         {

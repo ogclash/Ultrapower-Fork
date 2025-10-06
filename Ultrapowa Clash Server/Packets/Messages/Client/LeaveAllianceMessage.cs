@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UCS.Core;
 using UCS.Core.Network;
@@ -88,11 +87,13 @@ namespace UCS.Packets.Messages.Client
 
                 alliance.RemoveMember(avatar.UserId);
                 avatar.AllianceId = 0;
+                avatar.m_vDonated = 0;
+                avatar.m_vReceived = 0;
 
                 if (alliance.GetAllianceMembers().Count > 0)
                 {
                     AllianceEventStreamEntry eventStreamEntry = new AllianceEventStreamEntry();
-                    eventStreamEntry.ID = alliance.m_vChatMessages.Count + 1;
+                    eventStreamEntry.ID = alliance.m_vChatMessages.Count > 0 ? alliance.m_vChatMessages.Last().ID + 1 : 1;
                     eventStreamEntry.SetSender(avatar);
                     eventStreamEntry.EventType = 4;
                     alliance.AddChatMessage(eventStreamEntry);

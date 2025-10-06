@@ -2,7 +2,6 @@ using System;
 using System.Configuration;
 using System.Linq;
 using System.Management;
-using System.IO;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
@@ -15,7 +14,7 @@ using UCS.Logic;
 using UCS.Packets.Messages.Server;
 using UCS.Core.Checker;
 using UCS.Core.Web;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace UCS.Helpers
 {
@@ -34,6 +33,10 @@ namespace UCS.Helpers
                 while (true)
                 {
                     string entry = Console.ReadLine().ToLower();
+                    if (entry == null)
+                    {
+                        continue;
+                    }
                     switch (entry)
                     {
                         case "/help":
@@ -54,13 +57,12 @@ namespace UCS.Helpers
                             break;
 
                         case "/info":
-                            Console.WriteLine("------------------------------------->");
+                            WriteLine("------------------------------------->");
                             Say($"UCS Version:         {Constants.Version}");
                             Say($"Build:               {Constants.Build}");
-                            Say($"LicenseID:           {Constants.LicensePlanID}");
-                            Say($"CoC Version from SC: {VersionChecker.LatestCoCVersion()}");
+                            Say($"CoC Version from SC: {VersionChecker.LatestSupportedVersion()}");
                             Say($"Ultrapower  - {DateTime.Now.Year}");
-                            Console.WriteLine("------------------------------------->");
+                            WriteLine("------------------------------------->");
                             break;
 
                         case "/dl csv":
@@ -77,10 +79,10 @@ namespace UCS.Helpers
                             break;
 
                         case "/banned":
-                            Console.WriteLine("------------------------------------->");
+                            WriteLine("------------------------------------->");
                             Say("Banned IP Addresses:");
                             ConnectionBlocker.GetBannedIPs();
-                            Console.WriteLine("------------------------------------->");
+                            WriteLine("------------------------------------->");
                             break;
 
                         case "/addip":
@@ -92,21 +94,27 @@ namespace UCS.Helpers
                             break;
 
                         case "/saveall":
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.WriteLine("----------------------------------------------------->");
-                            Say($"Starting saving of all Players... ({ResourcesManager.m_vInMemoryLevels.Count})");
-                            Resources.DatabaseManager.Save(ResourcesManager.m_vInMemoryLevels.Values.ToList()).Wait();
-                            Say("Finished saving of all Players!");
-                            Say($"Starting saving of all Alliances... ({ResourcesManager.GetInMemoryAlliances().Count})");
-                            Resources.DatabaseManager.Save(ResourcesManager.GetInMemoryAlliances()).Wait();
-                            Say("Finished saving of all Alliances!");
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            Console.WriteLine("----------------------------------------------------->");
-                            Console.ResetColor();
+                            Task.Run(async () =>
+                            {
+                                while (true)
+                                {
+                                    ForegroundColor = ConsoleColor.Yellow;
+                                    WriteLine("----------------------------------------------------->");
+                                    Say($"Starting saving of all Players... ({ResourcesManager.m_vInMemoryLevels.Count})");
+                                    await Resources.DatabaseManager.Save(ResourcesManager.m_vInMemoryLevels.Values.ToList());
+                                    Say("Finished saving of all Players!");
+                                    Say($"Starting saving of all Alliances... ({ResourcesManager.GetInMemoryAlliances().Count})");
+                                    await Resources.DatabaseManager.Save(ResourcesManager.GetInMemoryAlliances());
+                                    Say("Finished saving of all Alliances!");
+                                    ForegroundColor = ConsoleColor.Yellow;
+                                    WriteLine("----------------------------------------------------->");
+                                    ResetColor();
+                                    await Task.Delay(5000);
+                                }
+                            });
+                            Say("Auto-saving every 5 seconds started.");
                             break;
-
                         
-
                         case "/maintenance":
                             StartMaintenance();
                             break;
@@ -210,7 +218,7 @@ namespace UCS.Helpers
                             Say("Unknown command, type \"/help\" for a list containing all available commands.");
                             break;
                     }
-               }
+                }
             })); 
             T.Start();
         }
@@ -220,11 +228,8 @@ namespace UCS.Helpers
                 
         public static void StartMaintenance()
         {
+            Time = 600;
             Print("------------------------------------------------------------------->");
-            Say("Please type in now your Time for the Maintenance");
-            Say("(Seconds): ");
-            String newTime = ReadLine();
-            Time = Convert.ToInt32(((newTime + 0) + 0) + 0);
             Say("Server will be restarted in 5min and will start with the");
             Say("Maintenance Mode (" + Time + ")");
             Print("------------------------------------------------------------------->");
@@ -269,7 +274,6 @@ namespace UCS.Helpers
                 Error("Please type in a valid time!");
                 Error("20min = 1200, 10min = 600");
                 Say();
-                StartMaintenance();
             }
 
             foreach(Level p in ResourcesManager.m_vInMemoryLevels.Values.ToList())

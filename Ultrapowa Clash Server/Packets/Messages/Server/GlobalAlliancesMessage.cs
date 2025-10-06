@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UCS.Core;
-using UCS.Helpers;
 using UCS.Helpers.List;
 using UCS.Logic;
 
@@ -26,6 +24,8 @@ namespace UCS.Packets.Messages.Server
             {
                 try
                 {
+                    if (alliance.m_vAllianceMembers.Count() == 0)
+                        continue;
                     if (i >= 100)
                         break;
                     packet1.AddLong(alliance.m_vAllianceId);

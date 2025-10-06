@@ -19,8 +19,26 @@ namespace UCS.Packets.Messages.Server
         {
             List<byte> data = new List<byte>();
             var i = 0;
+            
+            List<Level> localPlayers = new List<Level>();
+            localPlayers.Add(this.Device.Player);
 
-            foreach (Level player in ResourcesManager.m_vInMemoryLevels.Values.ToList().OrderByDescending(t => t.Avatar.GetScore()))
+            string playerRegion = this.Device.Player.Avatar.Region;  // Get current player's region
+
+            foreach (Level player in ResourcesManager.m_vInMemoryLevels.Values)
+            {
+                if (player == null || player.Avatar == null)
+                    continue;
+
+                ClientAvatar pl = player.Avatar;
+
+                if (pl.Region == playerRegion && player != this.Device.Player  && player.Avatar.AvatarName != "NoNameYet")
+                {
+                    localPlayers.Add(player);
+                }
+            }
+
+            foreach (Level player in localPlayers.OrderByDescending(t => t.Avatar.GetScore()))
             {
                 try
                 {
@@ -31,15 +49,16 @@ namespace UCS.Packets.Messages.Server
                     data.AddString(pl.AvatarName);
                     data.AddInt(i + 1);
                     data.AddInt(pl.GetScore());
+                    // TODO
                     data.AddInt(i + 1);
                     data.AddInt(pl.m_vAvatarLevel);
-                    data.AddInt(100);
+                    data.AddInt(0);
                     data.AddInt(1);
-                    data.AddInt(100);
+                    data.AddInt(0);
                     data.AddInt(1);
                     data.AddInt(pl.m_vLeagueId);
                     data.AddString(pl.Region.ToUpper());
-                    data.AddLong(pl.AllianceId);
+                    data.AddLong(pl.UserId);
                     data.AddInt(1);
                     data.AddInt(1);
                     if (pl.AllianceId > 0)
@@ -52,6 +71,7 @@ namespace UCS.Packets.Messages.Server
                     }
                     else
                         data.Add(0);
+                    //data.AddInt(52);
                     i++;
                 }
                 catch (Exception) { }

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.IO;
 using UCS.Core;
 using UCS.Core.Network;
-using UCS.Helpers;
 using UCS.Helpers.Binary;
 using UCS.Logic;
 using UCS.Packets.Messages.Server;
+using UCS.Packets.Messages.Server.Support;
 
 namespace UCS.Packets.Messages.Client
 {
@@ -28,8 +27,10 @@ namespace UCS.Packets.Messages.Client
             try
             {
                 Alliance alliance = ObjectManager.GetAlliance(m_vAllianceId);
-                if (alliance != null)
-                    new AllianceDataMessage(Device, alliance).Send();
+                if (this.Device.Player.Avatar.minorversion >= 709)
+                    new AllianceDataMessage(Device, alliance).Send(); 
+                else
+                    new AllianceDataForOldClients(Device, alliance).Send();   
             }
             catch (Exception)
             {

@@ -1,26 +1,22 @@
 using System;
 using System.Configuration;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using UCS.Core;
 using UCS.Core.Crypto;
 using UCS.Core.Network;
 using UCS.Core.Settings;
-using UCS.Files.Logic;
 using UCS.Helpers;
 using UCS.Helpers.Binary;
 using UCS.Logic;
 using UCS.Logic.AvatarStreamEntry;
 using UCS.Logic.Enums;
-using UCS.Packets;
 using UCS.Packets.Messages.Server;
+using UCS.Packets.Messages.Server.Support;
 using UCS.Utilities.Blake2B;
 using UCS.Utilities.Sodium;
-using static UCS.Packets.Device;
 
 namespace UCS.Packets.Messages.Client
 {
@@ -31,7 +27,6 @@ namespace UCS.Packets.Messages.Client
         {
             this.Device.PlayerState = State.LOGIN;
         }
-
         public string AdvertisingGUID;
         public string AndroidDeviceID;
         public string ClientVersion;
@@ -54,6 +49,7 @@ namespace UCS.Packets.Messages.Client
         public bool Android;
         public long UserID;
         public Level level;
+        long adminaccount =  0;
 
 
         /// <summary>
@@ -78,11 +74,25 @@ namespace UCS.Packets.Messages.Client
             this.Length = (ushort)Buffer.Length;
 
         }
+        
+        bool IsBinaryToken(string token)
+        {
+            foreach (char c in token)
+            {
+                if (c < 0x20 || c > 0x7E) // outside printable ASCII
+                    return true;
+            }
+            return false;
+        }
 
         internal override void Decode()
         {
             this.UserID = this.Reader.ReadInt64();
-            this.UserToken = Reader.ReadString();
+            var bytes = Reader.ReadBytes();
+            if (bytes == null)
+                this.UserToken = null;
+            else
+                this.UserToken = Encoding.UTF8.GetString(bytes);
             this.MajorVersion = Reader.ReadInt32();
             this.ContentVersion = Reader.ReadInt32();
             this.MinorVersion = Reader.ReadInt32();
@@ -99,13 +109,40 @@ namespace UCS.Packets.Messages.Client
             this.Reader.ReadString();
             this.AndroidDeviceID = this.Reader.ReadString();
             this.FacebookDistributionID = this.Reader.ReadString();
-            this.IsAdvertisingTrackingEnabled = this.Reader.ReadBoolean();
+            this.IsAdvertisingTrackingEnabled = false;
             this.VendorGUID = this.Reader.ReadString();
             this.Seed = this.Reader.ReadUInt32();
             this.Reader.ReadByte();
             this.Reader.ReadString();
             this.Reader.ReadString();
             this.ClientVersion = this.Reader.ReadString();
+            if (UserToken != null && IsBinaryToken(this.UserToken))
+                this.UserToken = BitConverter.ToUInt64(bytes, 0).ToString();
+            Logger.Write($"UserID: {this.UserID}");
+            Logger.Write($"UserToken: {this.UserToken}");
+            Logger.Write($"MajorVersion: {this.MajorVersion}");
+            Logger.Write($"MinorVersion: {this.MinorVersion}");
+            Logger.Write($"Region: {this.Region}");
+            if (this.Android)
+            {
+                this.Device.AndroidID = this.AndroidDeviceID;
+                Logger.Write($"Device: Android");
+                Logger.Write($"AndroidDeviceID: {this.AndroidDeviceID}");
+            }
+            else
+            {
+                this.Device.OpenUDID = this.OpenUDID;
+                Logger.Write($"Device: IOS");
+                Logger.Write($"OpenUDID: {this.OpenUDID}");
+                this.Device.AdvertiseID = this.AdvertisingGUID;
+                Logger.Write($"AdvertisingGUID: {this.AdvertisingGUID}");
+            }
+            this.Device.Model = this.DeviceModel;
+            Logger.Write($"DeviceModel: {this.DeviceModel}");
+            this.Device.OSVersion = this.OSVersion;
+            Logger.Write($"OSVersion: {this.OSVersion}");
+            Logger.Write($"Seed: {this.Seed}");
+            Logger.Write($"MasterHash: {this.MasterHash}\n");
         }
 
         internal override void Process()
@@ -114,17 +151,23 @@ namespace UCS.Packets.Messages.Client
             {
                 if (this.Device.PlayerState == State.LOGIN)
                 {
-                    if (Constants.LicensePlanID == 3)
+                    this.adminaccount=  0;
+                    try {
+                        this.adminaccount = Utils.ParseConfigInt("AdminAccount");
+                    }catch (Exception){}
+                    if (this.UserID == this.adminaccount)
                     {
-                        if (ResourcesManager.m_vOnlinePlayers.Count >= Constants.MaxOnlinePlayers)
+                        CheckClient();
+                        return;
+                    }
+                    if (ResourcesManager.m_vOnlinePlayers.Count >= Constants.MaxOnlinePlayers)
+                    {
+                        new LoginFailedMessage(Device)
                         {
-                            new LoginFailedMessage(Device)
-                            {
-                                ErrorCode = 12,
-                                Reason = "Sorry the Server is currently full! \n\nPlease try again in a few Minutes.\n"
-                            }.Send();
-                            return;
-                        }
+                            ErrorCode = 12,
+                            Reason = "Sorry the Server is currently full! \n\nPlease try again in a few Minutes.\n"
+                        }.Send();
+                        return;
                     }
 
                     if (ParserThread.GetMaintenanceMode())
@@ -136,32 +179,6 @@ namespace UCS.Packets.Messages.Client
                             Version = 8
                         }.Send();
                         return;
-                    }
-
-                    if (Constants.LicensePlanID < 1)
-                    {
-                        if (ResourcesManager.m_vOnlinePlayers.Count >= 350)
-                        {
-                            new LoginFailedMessage(Device)
-                            {
-                                ErrorCode = 11,
-                                Reason = "This is a Free Version of UCS. Please Upgrade to Pro or Ultra Using Ultrapower Keygen"
-                            }.Send();
-                            return;
-                        }
-                    }
-                    else if (Constants.LicensePlanID < 2)
-                    {
-                        if (ResourcesManager.m_vOnlinePlayers.Count >= 700)
-                        {
-                            new LoginFailedMessage(Device)
-                            {
-                                ErrorCode = 11,
-                                Reason =
-                                    "This is a Pro Version of UCS. Please Upgrade to Ultra using Ultrapower Keygen"
-                            }.Send();
-                            return;
-                        }
                     }
 
                     int time = Convert.ToInt32(ConfigurationManager.AppSettings["maintenanceTimeleft"]);
@@ -185,18 +202,7 @@ namespace UCS.Packets.Messages.Client
                         }.Send();
                         return;
                     }
-
-                    string[] cv2 = ConfigurationManager.AppSettings["ClientVersion"].Split('.');
-                    string[] cv = ClientVersion.Split('.');
-                    if (cv[0] != cv2[0] || cv[1] != cv2[1] || cv[2] != cv2[2])
-                    {
-                        new LoginFailedMessage(Device)
-                        {
-                            ErrorCode = 8,
-                            UpdateUrl = Utils.ParseConfigString("UpdateUrl")
-                        }.Send();
-                        return;
-                    }
+                    
 
                     if (Convert.ToBoolean(ConfigurationManager.AppSettings["useCustomPatch"]) &&
                         MasterHash != ObjectManager.FingerPrint.sha)
@@ -213,23 +219,77 @@ namespace UCS.Packets.Messages.Client
                     CheckClient();
                 }
             }
-            catch
-            {
-                
-            }
+            catch { }
         }
 
-        private async void LogUser()
+        private async void LogUser(bool empty_login = false)
         {
-            ResourcesManager.LogPlayerIn(level, Device);
-            level.Avatar.Region = Resources.Region.GetIpCountry(level.Avatar.IPAddress = Device.IPAddress);
-
-            new LoginOkMessage(this.Device)
+            if (!this.Android && this.level.Avatar.TutorialStepsCount < 10)
             {
-                ServerMajorVersion = MajorVersion,
-                ServerBuild = MinorVersion,
-                ContentVersion = ContentVersion
-            }.Send();
+                Version deviceOs = new Version(this.OSVersion);
+                Version requiredVersion = new Version("18.0");
+                if (deviceOs.CompareTo(requiredVersion) >= 0)
+                {
+                    string fileName = this.OpenUDID + ".txt";
+                    string filePath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), 
+                        fileName
+                    );
+
+                    int counter = 0;
+
+                    // If file already exists, read its value
+                    if (File.Exists(filePath))
+                    {
+                        string content = File.ReadAllText(filePath);
+                        int.TryParse(content, out counter);
+                    }
+
+                    // Increment counter
+                    counter++;
+
+                    // Write new value back to file
+                    File.WriteAllText(filePath, counter.ToString());
+                    if (counter > 5)
+                    {
+                        Level dummy = await ResourcesManager.GetPlayer(171);
+                        dummy.Avatar.UserId = level.Avatar.UserId;
+                        dummy.Avatar.UserToken = level.Avatar.UserToken;
+                        dummy.Avatar.AvatarName = "NoNameYet";
+                        dummy.Avatar.TutorialStepsCount = 10;
+                        dummy.Avatar.HighID = 0;
+                        dummy.Avatar.LowID = (int)level.Avatar.UserId;
+                        dummy.Avatar.CurrentHomeId = level.Avatar.UserId;
+                        level.Avatar = dummy.Avatar;
+                        level.GameObjectManager = dummy.GameObjectManager;
+                    }
+                }
+            }
+            
+            level.Avatar.old_account = (int)UserID;
+
+            if (!empty_login)
+            {
+                level.Avatar.LowID = (int)this.UserID;
+                level.Avatar.CurrentHomeId = this.UserID;
+                level.Avatar.UserId = this.UserID;
+                level.Avatar.UserToken = this.UserToken;
+                ObjectManager.getDatabaseManager().CreateAccount(level);
+                
+            }
+            ResourcesManager.LogPlayerIn(level, Device);
+            level.Avatar.m_vAndroid = this.Android;
+            level.Avatar.Region = this.Region.Split('-')[0].ToUpper();
+
+            var message = new LoginOkMessage(this.Device)
+            {
+                ServerMajorVersion = 8,
+                ServerBuild = 709,
+                ContentVersion = 16
+            };
+            this.Device.Player.Avatar.mayorversion = this.MajorVersion;
+            this.Device.Player.Avatar.minorversion = this.MinorVersion;
+            message.Send();
 
             if (level.Avatar.AllianceId > 0)
             {
@@ -246,28 +306,69 @@ namespace UCS.Packets.Messages.Client
                     this.level.Avatar.AllianceId = 0;
                 }
             }
-            new AvatarStreamMessage(this.Device).Send();
-            new OwnHomeDataMessage(this.Device, level).Send();
+            new AvatarStreamMessage(this.Device, true).Send();
+            if (this.MinorVersion < 709)
+            {
+                new OwnHomeDataForOldClients(this.Device, level).Send();
+                level.Avatar.SendCLanMessagesToOldClient(this.Device);
+            }
+            else
+                new OwnHomeDataMessage(this.Device, level).Send();
             new BookmarkMessage(this.Device).Send();
 
-            if (ResourcesManager.IsPlayerOnline(level))
+            foreach (AvatarStreamEntry amessage in Device.Player.Avatar.messages)
             {
-                AllianceMailStreamEntry mail = new AllianceMailStreamEntry();
-                mail.ID = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
-                mail.SenderId = 0;
-                //mail.SetSenderName("Clash Of Heroes Team");
-                mail.m_vSenderName = "Server Manager";
-                mail.IsNew = 2;
-                mail.AllianceId = 0;
-                mail.m_vSenderLeagueId = 22;
-                mail.AllianceBadgeData = 1526735450;
-                //mail.SetAllianceName("COH-TEAM");
-                mail.AllianceName = "Server Admin";
-                mail.Message = ConfigurationManager.AppSettings["AdminMessage"];
-                mail.m_vSenderLevel = 500;
-                AvatarStreamEntryMessage p = new AvatarStreamEntryMessage(level.Client);
-                p.SetAvatarStreamEntry(mail);
-                p.Send();
+                var type = amessage.GetStreamEntryType();
+                if (!amessage.wasOnline)
+                {
+                    amessage.IsNew = 2;
+                    amessage.wasOnline = true;
+                }
+                if (type == 3)
+                {
+                    AllianceDeclineStreamEntry ai = (AllianceDeclineStreamEntry) amessage;
+                    AvatarStreamEntryMessage p = new AvatarStreamEntryMessage(level.Client);
+                    p.SetAvatarStreamEntry(ai, false);
+                    p.Send();
+                }
+                else if (type == 4)
+                {
+                    if (this.Device.Player.Avatar.AllianceId > 0)
+                        continue;
+                    AllianceInviteStreamEntry ai = (AllianceInviteStreamEntry) amessage;
+                    AvatarStreamEntryMessage p = new AvatarStreamEntryMessage(level.Client);
+                    p.SetAvatarStreamEntry(ai, false);
+                    p.Send();
+                }
+                else if (type == 6)
+                {
+                    AllianceMailStreamEntry ai = (AllianceMailStreamEntry) amessage;
+                    AvatarStreamEntryMessage p = new AvatarStreamEntryMessage(level.Client);
+                    p.SetAvatarStreamEntry(ai, false);
+                    p.Send();
+                }
+            }
+
+            if (level.Avatar.reports.Count > 0 && level.Avatar.reports.Last().timer != null)
+            {
+                AvatarChatBanMessage _AvatarChatBanMessage = new AvatarChatBanMessage(level.Client);
+                _AvatarChatBanMessage.SetBanPeriod(level.Avatar.reports.Last().timer.GetRemainingSeconds(DateTime.Now)); // 30 Minutes
+                _AvatarChatBanMessage.Send();
+            }
+            if (this.adminaccount != 0 && Utils.ParseConfigString("AdminMessage") != "")
+            {
+                String amessage = Utils.ParseConfigString("AdminMessage").Replace("/n:", "\n");
+                AllianceMailStreamEntry server_update = new AllianceMailStreamEntry();
+                Level admin = await ResourcesManager.GetPlayer(this.adminaccount);
+                var admin_alliance = ObjectManager.GetAlliance(admin.Avatar.AllianceId);
+                server_update.SetSender(admin.Avatar);
+                server_update.AllianceId = admin_alliance.m_vAllianceId;
+                server_update.AllianceBadgeData = admin_alliance.m_vAllianceBadgeData;
+                server_update.AllianceName = admin_alliance.m_vAllianceName;
+                server_update.Message = amessage;
+                AvatarStreamEntryMessage sys_message = new AvatarStreamEntryMessage(level.Client);
+                sys_message.SetAvatarStreamEntry(server_update, false);
+                sys_message.Send();
             }
         }
 
@@ -275,63 +376,173 @@ namespace UCS.Packets.Messages.Client
         {
             try
             {
-                if (UserID == 0 || string.IsNullOrEmpty(UserToken))
+                if (string.IsNullOrEmpty(UserToken))
                 {
-                     NewUser();
-                     return;
+                    NewUser(true);
+                    return;
                 }
+                if (Android == false)
+                {
+                    var lines = File.ReadAllLines("auth");
+                    foreach (var line in lines)
+                    {
+                        var parts = line.Split(':');
+                        if (parts.Length < 3) continue;
 
+                        long id = long.Parse(parts[0]);
+                        string token = parts[1];
+                        if (token == "disabled")
+                        {
+                            string deviceid = parts[2];
+                            int dummyId = int.Parse(parts[3]);
+                            if (UserID == id && OpenUDID == deviceid)
+                            {
+                                var dummy = await ResourcesManager.GetPlayer(dummyId);
+                                UserID = dummy.Avatar.UserId;
+                                UserToken = dummy.Avatar.UserToken;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            int dummyId = int.Parse(parts[2]);
+                            if (UserID == id && UserToken == token)
+                            {
+                                var dummy = await ResourcesManager.GetPlayer(dummyId);
+                                UserID = dummy.Avatar.UserId;
+                                UserToken = dummy.Avatar.UserToken;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (UserID == 0)
+                    UserID = Seed;
                 level = await ResourcesManager.GetPlayer(UserID);
                 if (level != null)
                 {
+                    if (level.Avatar.UserToken != UserToken)
+                    {
+                        if (level.Avatar.AvatarName == "NoNameYet")
+                            level.Avatar.UserToken = UserToken;
+                        else
+                        {
+                            new LoginFailedMessage(Device)
+                            {
+                                ErrorCode = 12,
+                                Reason = "We have some Problems with your Account. Please contact Server Support."
+                            }.Send();
+                            return;
+                        }
+                    }
+                    if (level.Avatar.account_switch > 1)
+                    {
+                        Logger.Write("Switching to UserID: " + level.Avatar.account_switch);
+                        level = await ResourcesManager.GetPlayer(level.Avatar.account_switch);
+                    } else if (level.Avatar.account_switch == 1)
+                    {
+                        Logger.Write("Creating new Account because of command");
+                        level.Avatar.account_switch = 0;
+                        NewUser(true);
+                        return;
+                    }
+                    
                     if (level.Avatar.AccountBanned)
                     {
-                        new LoginFailedMessage(Device) {ErrorCode = 11}.Send();
+                        new LoginFailedMessage(Device) { ErrorCode = 11 }.Send();
                         return;
                     }
-                    if (string.Equals(level.Avatar.UserToken, UserToken, StringComparison.Ordinal))
+
+                    if (level.Client != null)
                     {
-                        LogUser();
-                    }
-                    else
-                    {
-                        new LoginFailedMessage(Device)
+                        if (level.Client.Connected)
                         {
-                            ErrorCode = 11,
-                            Reason = "We have some Problems with your Account. Please clean your App Data."
-                        }.Send();
-                        return;
+                            if (level.Avatar.old_account != level.Avatar.UserId)
+                            {
+                                Level oldplayer = await ResourcesManager.GetPlayer(level.Avatar.old_account);
+                                if (oldplayer.Avatar.UserId == this.adminaccount)
+                                {
+                                    new LoginFailedMessage(Device)
+                                    {
+                                        ErrorCode = 1,
+                                        Reason = "An admin is logged in currently. Please wait a moment"
+                                    }.Send();
+                                    return;
+                                }
+                            }
+
+                            ResourcesManager.DisconnectClient(level.Client);
+                            new LoginFailedMessage(Device)
+                            {
+                                ErrorCode = 1,
+                                Reason = "Seem like and old session was active, it was terminated now."
+                            }.Send();
+                            return;
+                        }
                     }
+                    LogUser(true);
                 }
                 else
                 {
-                    new LoginFailedMessage(Device)
-                    {
-                        ErrorCode = 11,
-                        Reason = "We have some Problems with your Account. Please clean your App Data."
-                    }.Send();
-                    return;
+                    Logger.Write("Creating new Account because of UserID not existent in DB");
+                    NewUser(false, UserID);
                 }
-            } catch (Exception) { }
+            }
+            catch (Exception e)
+            {
+                Logger.Write("Creating new Account because of Error: " + e.Message);
+                NewUser();
+            }
         }
 
-        private void NewUser()
+        private void NewUser(bool empty_login = false, long user_id = 0)
         {
-            level = ObjectManager.CreateAvatar(0, null);
-            if (string.IsNullOrEmpty(UserToken))
+            Level oldlevel = level;
+            level = ObjectManager.CreateAvatar(user_id, null);
+            if (oldlevel != null)
+                oldlevel.Avatar.account_switch = (int)level.Avatar.UserId;
+            if (empty_login)
+                level.Avatar.UserToken = GenerateUserToken(level.Avatar.UserId);
+            else
             {
-                for (int i = 0; i < 20; i++)
-                {
-                    char letter = (char)Resources.Random.Next('A', 'Z');
-                    this.level.Avatar.UserToken +=  letter;
-                }
+                level.Avatar.UserToken = UserToken;
+                level.Avatar.UserId = UserID;
             }
             
             level.Avatar.InitializeAccountCreationDate();
+            level.Avatar.Region = this.Region;
             level.Avatar.m_vAndroid = this.Android;
 
             Resources.DatabaseManager.Save(level);
-            LogUser();
+            LogUser(empty_login);
+        }
+        public string GenerateUserToken(long userId)
+        {
+            string deterministicPart;
+            using (var sha256 = SHA256.Create())
+            {
+                byte[] hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(userId.ToString()));
+                deterministicPart = BitConverter.ToString(hash)
+                    .Replace("-", "")
+                    .ToLower()
+                    .Substring(0, 20);
+            }
+            
+            string randomPart;
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                var bytes = new byte[16]; // 8 bytes → enough for 10 Base64 chars
+                rng.GetBytes(bytes);
+                randomPart = Convert.ToBase64String(bytes)
+                    .Replace("+", "")
+                    .Replace("/", "")
+                    .Replace("=", "")
+                    .Substring(0, 20);
+            }
+
+            // Combine
+            string token = deterministicPart + randomPart;
+            return token; // 20 chars
         }
     }
 }

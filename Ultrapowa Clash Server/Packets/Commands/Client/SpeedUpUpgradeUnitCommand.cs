@@ -7,6 +7,8 @@ namespace UCS.Packets.Commands.Client
     internal class SpeedUpUpgradeUnitCommand : Command
     {
         internal int m_vBuildingId;
+        internal uint m_vUnitId;
+        
 
         public SpeedUpUpgradeUnitCommand(Reader reader, Device client, int id) : base(reader, client, id)
         {
@@ -15,7 +17,7 @@ namespace UCS.Packets.Commands.Client
         internal override void Decode()
         {
             this.m_vBuildingId = this.Reader.ReadInt32();
-            this.Reader.ReadInt32();
+            this.m_vUnitId = this.Reader.ReadUInt32();
         }
 
         internal override void Process()

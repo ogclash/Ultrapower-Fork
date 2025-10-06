@@ -1,5 +1,4 @@
 using UCS.Core;
-using UCS.Files.Logic;
 using UCS.Helpers.Binary;
 using UCS.Logic;
 
@@ -15,7 +14,7 @@ namespace UCS.Packets.Commands.Client
         internal override void Decode()
         {
             this.BuildingId = this.Reader.ReadInt32();
-            this.Unknown1 = this.Reader.ReadUInt32();
+            this.Reader.ReadUInt32();
         }
 
         internal override void Process()
@@ -31,26 +30,19 @@ namespace UCS.Packets.Commands.Client
                         var ca = this.Device.Player.Avatar;
                         string name = this.Device.Player.GameObjectManager.GetGameObjectByID(BuildingId).GetData().GetName();
                         Logger.Write("Canceling Building Upgrade: " + name + " (" + BuildingId + ')');
-                        if (string.Equals(name, "Alliance Castle"))
-                        {
-                            ca.DeIncrementAllianceCastleLevel();
-                            Building a = (Building)go;
-                            BuildingData al = a.GetBuildingData();
-                            ca.SetAllianceCastleTotalCapacity(al.GetUnitStorageCapacity(ca.GetAllianceCastleLevel() - 1));
-                        }
-                        else if (string.Equals(name, "Town Hall"))
-                            ca.DeIncrementTownHallLevel();
 
                         constructionItem.CancelConstruction();
                     }
                 }
                 else if (go.ClassId == 3)
                 {
+                    GameObject go2 = Device.Player.GameObjectManager.GetGameObjectByID(BuildingId);
+                    var obstacle = (Obstacle) go2;
+                    obstacle.CancelClearing();
                 }
             }
         }
 
         public int BuildingId;
-        public uint Unknown1;
     }
 }

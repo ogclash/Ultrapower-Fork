@@ -28,9 +28,9 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>true</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://www.ultrapowa.xyz/ucs/</InstallUrl>
-    <UpdateUrl>https://www.ultrapowa.xyz/ucs/</UpdateUrl>
-    <SupportUrl>http://www.ultrapowa.com</SupportUrl>
+    <InstallUrl>https:/clashofclans.bl4ck.net/server/</InstallUrl>
+    <UpdateUrl>https:/clashofclans.bl4ck.net/update/</UpdateUrl>
+    <SupportUrl>https:/clashofclans.bl4ck.net</SupportUrl>
     <TargetCulture>en</TargetCulture>
     <ProductName>UCS</ProductName>
     <PublisherName>UltraPowa</PublisherName>
@@ -217,6 +217,7 @@
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
@@ -237,10 +238,11 @@
   <ItemGroup>
     <Compile Include="Core\Checker\ConnectionBlocker.cs" />
     <Compile Include="Core\Checker\DirectoryChecker.cs" />
-    <Compile Include="Core\Checker\LicenseChecker.cs" />
     <Compile Include="Core\Crypto\Key.cs" />
     <Compile Include="Core\CSVManager.cs" />
     <Compile Include="Core\Events\Region.cs" />
+    <Compile Include="Core\LogicMath\LogicELOMath.cs" />
+    <Compile Include="Core\LogicMath\LogicMath.cs" />
     <Compile Include="Core\Network\Pool.cs" />
     <Compile Include="Core\Network\Processor.cs" />
     <Compile Include="Core\Network\TCP\Gateway.cs" />
@@ -262,30 +264,56 @@
     <Compile Include="Helpers\Binary\Reader.cs" />
     <Compile Include="Helpers\List\Writter.cs" />
     <Compile Include="Logic\API\FacebookApi.cs" />
+    <Compile Include="Logic\AvatarStreamEntry\AllianceDeclineStreamEntry.cs" />
+    <Compile Include="Logic\AvatarStreamEntry\AllianceInviteStreamEntry.cs" />
+    <Compile Include="Logic\BattleResult.cs" />
     <Compile Include="Logic\ClanWars.cs" />
+    <Compile Include="Logic\Component\ObstacleComponent.cs" />
     <Compile Include="Logic\Enums\Database.cs" />
     <Compile Include="Logic\Enums\Exits.cs" />
     <Compile Include="Logic\Enums\Save.cs" />
     <Compile Include="Logic\Enums\State.cs" />
+    <Compile Include="Logic\Report.cs" />
     <Compile Include="Logic\StreamEntry\ChallengeStreamEntry.cs" />
     <Compile Include="Packets\Commands\Client\CastSpellCommand.cs" />
+    <Compile Include="Packets\Commands\Client\DecreaseShieldTimeInfo.cs" />
+    <Compile Include="Packets\Commands\Client\LockUnitProductionCommand.cs" />
+    <Compile Include="Packets\Commands\Client\MoveWholeLayoutCommand.cs" />
     <Compile Include="Packets\Commands\Client\PlaceAllianceTroopsCommand.cs" />
     <Compile Include="Packets\Commands\Client\PlayerWarStatusCommand.cs" />
+    <Compile Include="Packets\Commands\Client\RearmTrapCommand.cs" />
+    <Compile Include="Packets\Commands\Client\RemoveAllBuildingsFromLayoutCommand.cs" />
     <Compile Include="Packets\Commands\Client\RemoveShieldToAttackCommand.cs" />
     <Compile Include="Packets\Commands\Client\RenameQuickTrainCommand.cs" />
     <Compile Include="Packets\Commands\Client\SpeedUpRequestUnitsCommand.cs" />
     <Compile Include="Packets\Commands\Server\ReceivedAllianceUnitCommand.cs" />
     <Compile Include="Packets\Crypto.cs" />
+    <Compile Include="Packets\GameOpCommands\AddGemsOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\ClearBattleLogGameOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\ClearInboxGameOpCommand.cs" />
     <Compile Include="Packets\GameOpCommands\MinRessourcesGameOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\NewAccountGameOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\ResetAccGameOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\SetPasswordGameOpCommand.cs" />
+    <Compile Include="Packets\GameOpCommands\SwitchAccGameOpCommand.cs" />
+    <Compile Include="Packets\Messages\Client\AcceptInviteMessage.cs" />
     <Compile Include="Packets\Messages\Client\AccountSwitchMessage.cs" />
     <Compile Include="Packets\Messages\Client\Api\Bind_Google_Message.cs" />
     <Compile Include="Packets\Messages\Client\RetributionAttackerMessage.cs" />
+    <Compile Include="Packets\Messages\Client\DeclineInviteMessage.cs" />
+    <Compile Include="Packets\Messages\Client\WatchAttackMessage.cs" />
     <Compile Include="Packets\Messages\Server\Api\Facebook_Connect_OK.cs" />
     <Compile Include="Packets\Messages\Server\ClanBattleLiveNotificationMessage.cs" />
     <Compile Include="Packets\Messages\Server\Clash_Friend_Request_Sent_Message.cs" />
     <Compile Include="Packets\Messages\Server\DeviceAlreadyBoundMessage.cs" />
     <Compile Include="Packets\Messages\Server\Friend_Request_Failed_Message.cs" />
     <Compile Include="Packets\Messages\Server\RetributionDataMessage.cs" />
+    <Compile Include="Packets\Messages\Server\Support\AllianceDataForOldClients.cs" />
+    <Compile Include="Packets\Messages\Server\Support\AvatarProfileForOldClients.cs" />
+    <Compile Include="Packets\Messages\Server\Support\EnemyHomeDataForOldClients.cs" />
+    <Compile Include="Packets\Messages\Server\Support\NpcDataForOldClients.cs" />
+    <Compile Include="Packets\Messages\Server\Support\OwnHomeDataForOldClients.cs" />
+    <Compile Include="Packets\Messages\Server\Support\VisitedHomeDataForOldClients.cs" />
     <Compile Include="Utilities\Blake2B\Blake2BBase.cs" />
     <Compile Include="Utilities\Blake2B\Blake2BBuilder.cs" />
     <Compile Include="Utilities\Blake2B\Blake2BConfig.cs" />
@@ -425,6 +453,9 @@
       <SubType>Code</SubType>
     </Compile>
     <None Include="app.manifest" />
+    <None Include="bin\Debug\Gamefiles\logic\buildings.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Gamefiles\csv\animations.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -1063,10 +1094,88 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="bin\Debug\auth" />
+    <Content Include="bin\Debug\Gamefiles\starting_home_test.json" />
+    <Content Include="bin\Debug\WebAPI\HTML\Manager.html" />
+    <Content Include="WebAPI\HTML\Manager.html" />
     <None Include="WebAPI\HTML\Statistics.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Resource Include="icone-ucs.ico" />
+    <Content Include="bin\Debug\Gamefiles\logic\buildings.csv" />
+    <Content Include="Gamefiles\level\NPC\npc1.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc10.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc11.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc12.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc13.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc14.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc15.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc16.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc17.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc18.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc19.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc2.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc20.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc21.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc22.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc23.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc24.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc25.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc26.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc27.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc28.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc29.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc3.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc30.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc31.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc32.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc33.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc34.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc35.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc36.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc37.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc38.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc39.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc4.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc40.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc41.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc42.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc43.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc44.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc45.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc46.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc47.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc48.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc49.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc5.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc50.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc51.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc52.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc53.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc54.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc55.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc56.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc57.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc58.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc59.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc6.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc60.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc61.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc62.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc63.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc64.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc65.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc66.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc67.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc68.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc69.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc7.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc70.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc71.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc72.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc73.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc8.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
+    <Content Include="Gamefiles\level\NPC\npc9.json"><CopyToOutputDirectory>Always</CopyToOutputDirectory></Content>
     <Content Include="Tools\ucsdb.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1364,14 +1473,7 @@
       <DependentUpon>UCSUI.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project refers to one or more NuGet packages that are not on this computer. Use the reset tool of NuGet packages to download them. For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.2.0-xbuild02\build\net40\Baseclass.Contrib.Nuget.Output.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Baseclass.Contrib.Nuget.Output.2.2.0-xbuild02\build\net40\Baseclass.Contrib.Nuget.Output.targets'))" />
-  </Target>
   <PropertyGroup>
     <PreBuildEvent>if not exist "$(TargetDir)Logs" mkdir "$(TargetDir)Logs"
 if not exist "$(TargetDir)Patch" mkdir "$(TargetDir)Patch"
@@ -1384,7 +1486,13 @@ move x64 Library\
 move x86 Library\
 del *.xml</PostBuildEvent>
   </PropertyGroup>
-  <Import Project="..\packages\Baseclass.Contrib.Nuget.Output.2.2.0-xbuild02\build\net40\Baseclass.Contrib.Nuget.Output.targets" Condition="Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.2.0-xbuild02\build\net40\Baseclass.Contrib.Nuget.Output.targets')" />
+  <Import Project="..\packages\Baseclass.Contrib.Nuget.Output.2.4.4\build\Baseclass.Contrib.Nuget.Output.targets" Condition="Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.4.4\build\Baseclass.Contrib.Nuget.Output.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Baseclass.Contrib.Nuget.Output.2.4.4\build\Baseclass.Contrib.Nuget.Output.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Baseclass.Contrib.Nuget.Output.2.4.4\build\Baseclass.Contrib.Nuget.Output.targets'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

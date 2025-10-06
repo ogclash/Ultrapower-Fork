@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Linq;
 using UCS.Core;
 using UCS.Core.Network;
 using UCS.Helpers.Binary;
@@ -34,6 +34,8 @@ namespace UCS.Packets.Messages.Client
                     if (!alliance.IsAllianceFull())
                     {
                         this.Device.Player.Avatar.AllianceId = alliance.m_vAllianceId;
+                        this.Device.Player.Avatar.m_vDonated = 0;
+                        this.Device.Player.Avatar.m_vReceived = 0;
                         AllianceMemberEntry member = new AllianceMemberEntry(this.Device.Player.Avatar.UserId);
                         member.Role = 1;
                         alliance.AddAllianceMember(member);
@@ -47,7 +49,7 @@ namespace UCS.Packets.Messages.Client
                         c.Tick(this.Device.Player);
 
                         AllianceEventStreamEntry eventStreamEntry = new AllianceEventStreamEntry();
-                        eventStreamEntry.ID = alliance.m_vChatMessages.Count + 1;
+                        eventStreamEntry.ID = alliance.m_vChatMessages.Count > 0 ? alliance.m_vChatMessages.Last().ID + 1 : 1;
                         eventStreamEntry.SetSender(this.Device.Player.Avatar);
                         eventStreamEntry.EventType = 3;
                         alliance.AddChatMessage(eventStreamEntry);
@@ -58,6 +60,7 @@ namespace UCS.Packets.Messages.Client
 
                         new AllianceStreamMessage(Device, alliance).Send();
 
+                        this.Device.Player.Avatar.SendCLanMessagesToOldClient(this.Device);
                         foreach (AllianceMemberEntry a in alliance.GetAllianceMembers())
                         {
                             Level l = await ResourcesManager.GetPlayer(a.AvatarId);

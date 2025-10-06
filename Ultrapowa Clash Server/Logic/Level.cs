@@ -1,6 +1,9 @@
 using System;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UCS.Core;
+using UCS.Files.Logic;
 using UCS.Logic.Manager;
 using UCS.Packets;
 
@@ -12,7 +15,10 @@ namespace UCS.Logic
         internal WorkerManager WorkerManager;
         internal Device Client;
         internal ClientAvatar Avatar;
-
+        public CombatItemData lastTrainedUnitData;
+        public int lastTrainedUnitIndex = 0;
+        public bool IsBuildingPending = false;
+        public JObject unitProductionJson;
 
         public Level()
         {
@@ -39,13 +45,29 @@ namespace UCS.Logic
         }
 
         public string SaveToJSON() => JsonConvert.SerializeObject(GameObjectManager.Save(), Formatting.Indented);
+        public string SaveToJSONforPlayer() => JsonConvert.SerializeObject(GameObjectManager.Save(0, true), Formatting.Indented);
+        public string SaveToJSONforChallange() => JsonConvert.SerializeObject(GameObjectManager.Save(1), Formatting.Indented);
+        public string SaveToJSONforChallangeAttack() => JsonConvert.SerializeObject(GameObjectManager.Save(2), Formatting.Indented);
 
         public void SetHome(string jsonHome) => GameObjectManager.Load(JObject.Parse(jsonHome));
 
-        public void Tick()
+        public async Task Tick(bool offline = false)
         {
             this.Avatar.LastTickSaved = DateTime.UtcNow;
-            GameObjectManager.Tick();
+            GameObjectManager.Tick(offline);
+        }
+        
+        public async Task startTick()
+        {
+            try
+            {
+                this.Avatar.LastTickSaved = DateTime.UtcNow;
+                GameObjectManager.Tick(true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Write($"Runtime-Error: {ex.Message}");
+            }
         }
     }
 }

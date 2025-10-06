@@ -1,13 +1,9 @@
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using UCS.Core;
 using UCS.Core.Checker;
 using UCS.Core.Network;
-using UCS.Core.Threading;
 using UCS.Helpers.Binary;
 using UCS.Logic;
 using UCS.Packets.Messages.Server;
@@ -30,7 +26,7 @@ namespace UCS.Packets.Messages.Client
 
         internal override async void Process()
         {
-            if (Message.Length > 0 && Message.Length < 200)
+            if (Message.Length > 0 && Message.Length < 420)
             {
                 if (Message[0] == '/')
                 {
@@ -79,6 +75,7 @@ namespace UCS.Packets.Messages.Client
                         }
                         else
                         {
+                            Logger.Say($"Global Chat Message: '{Message}' from: {senderName}:{senderId}");
                             foreach (Level onlinePlayer in ResourcesManager.m_vOnlinePlayers)
                             {
                                 if (onlinePlayer.Avatar.Region == this.Device.Player.Avatar.Region)
@@ -93,7 +90,6 @@ namespace UCS.Packets.Messages.Client
                                     };
                                     p.SetAlliance(ObjectManager.GetAlliance(this.Device.Player.Avatar.AllianceId));
                                     p.Send();
-                                    Logger.Write($"Chat Message: '{Message}' from '{senderName}':'{senderId}'");
                                 }
                             }
                         }

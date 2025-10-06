@@ -2,9 +2,7 @@
 using UCS.Logic;
 using UCS.Helpers;
 using System;
-using System.Diagnostics;
 using UCS.Core;
-using UCS.Core.Crypto;
 using UCS.Core.Network;
 using UCS.Helpers.Binary;
 using UCS.Logic.Enums;
@@ -46,6 +44,11 @@ namespace UCS.Packets
         internal string AdvertiseID;
         internal string VendorID;
         internal string IPAddress;
+        internal string AttackInfo;
+        internal bool NpcAttacked = false;
+        internal int AttackedNpc;
+        internal Level AttackVictim;
+        internal bool ShieldInfo = false;
 
         internal uint ClientSeed;
 
@@ -96,12 +99,21 @@ namespace UCS.Packets
                                 _Message.Decode();
                                 _Message.Process();
                             }
-                            catch (Exception Exception)
-                            {
-                            }
+                            catch (Exception) { }
                         }
                         else
                         {
+                            if (this.Model == null && this.OSVersion == null && this.Interface == null &&
+                                Player == null)
+                            {
+                                Logger.Write("DDOS-Attempt");
+                                try
+                                {
+                                    ResourcesManager.DropClient(this);
+                                    this.Socket.Disconnect(true);
+                                } catch (Exception){}
+                                return;
+                            }
                             Logger.Write($"Message { _Header[0] } is unhandled");
                             this.Keys.SNonce.Increment();
                         }
@@ -112,10 +124,10 @@ namespace UCS.Packets
                         {
                             this.Process(Reader.ReadBytes((Buffer.Length - 7) - _Header[1]));
                         }
-                        // else
-                        //{
-                        //   this.Token.Reset();
-                        //}
+                        else
+                        {
+                           this.Token.Reset();
+                        }
                     }
                 }
             }

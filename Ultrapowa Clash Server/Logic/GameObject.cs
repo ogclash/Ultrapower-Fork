@@ -2,9 +2,6 @@
 using System.Windows;
 using Newtonsoft.Json.Linq;
 using UCS.Files.Logic;
-using System.Threading.Tasks;
-using UCS.Logic.Enums;
-using System;
 
 namespace UCS.Logic
 {
@@ -15,7 +12,7 @@ namespace UCS.Logic
             m_vLevel      = level;
             m_vData       = data;
             m_vComponents = new List<Component>();
-            for (var i = 0; i < 11; i++)
+            for (var i = 0; i <= 11; i++)
             {
                 m_vComponents.Add(new Component());
             }
@@ -57,7 +54,7 @@ namespace UCS.Logic
             }
         }
 
-        public Component GetComponent(int index, bool test)
+        public Component GetComponent(int index, bool test = false)
         {
             Component result = null;
             if (!test || m_vComponents[index].IsEnabled())

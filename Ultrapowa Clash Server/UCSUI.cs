@@ -1,23 +1,14 @@
 using MaterialSkin;
 using MaterialSkin.Controls;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using UCS.Core;
 using UCS.Core.Network;
 using UCS.Packets.Messages.Server;
-using System.Timers;
 using UCS.Logic.AvatarStreamEntry;
 using UCS.Core.Settings;
 using UCS.Logic;
@@ -52,20 +43,6 @@ namespace UCS
 			materialLabel16.Text = Convert.ToString(ObjectManager.GetMaxPlayerID());
             Version.Text = $"Version: {Constants.Version}";
             Build.Text = $"Build: {Constants.Version}";
-
-            if (Core.Settings.Constants.LicensePlanID < 2)
-            {
-                var message = MessageBox.Show("The User Interface is not available for unpaid Users. Please upgrade to ultra using the Ultrapower keygen", "Not available for unpaid Users.", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                if (message == DialogResult.OK)
-                {
-                    Close();
-                }
-                else
-                {
-                    Close();
-                }
-            }
 
 			// CONFIG EDITOR
 			txtStartingGems.Text = ConfigurationManager.AppSettings["startingGems"];
@@ -236,6 +213,35 @@ namespace UCS
             }
             /* LOAD PLAYER */
         }
+        
+        private async void reloadplayer_Click(object sender, EventArgs e)
+        {
+            /* LOAD PLAYER */
+            try
+            {
+                Level l = await ResourcesManager.GetPlayer(long.Parse(txtPlayerID.Text));
+                ResourcesManager.reloadPlayer(l);
+            }
+            catch (NullReferenceException)
+            {
+                var title = "Error";
+                MessageBox.Show("Player with ID " + txtPlayerID.Text + " not found!", title, MessageBoxButtons.RetryCancel, MessageBoxIcon.Information);
+                txtPlayerName.Enabled = false;
+                txtPlayerScore.Enabled = false;
+                txtPlayerGems.Enabled = false;
+                txtTownHallLevel.Enabled = false;
+                txtAllianceID.Enabled = false;
+                txtPlayerLevel.Enabled = false;
+
+                txtPlayerName.Clear();
+                txtPlayerScore.Clear();
+                txtPlayerGems.Clear();
+                txtTownHallLevel.Clear();
+                txtAllianceID.Clear();
+                txtPlayerLevel.Clear();
+            }
+            /* LOAD PLAYER */
+        }
 
         //Clear Button
         private void materialRaisedButton8_Click(object sender, EventArgs e)
@@ -259,13 +265,13 @@ namespace UCS
 
             l.Avatar.SetName(txtPlayerName.Text);
             l.Avatar.SetScore(Convert.ToInt32(txtPlayerScore.Text));
-            l.Avatar.m_vCurrentGems = Convert.ToInt32(txtPlayerGems.Text);
+            l.Avatar.AddDiamonds(Convert.ToInt32(txtPlayerGems.Text)-l.Avatar.m_vCurrentGems);
             l.Avatar.SetTownHallLevel(Convert.ToInt32(txtTownHallLevel.Text));
             l.Avatar.AllianceId = Convert.ToInt32(txtAllianceID.Text);
             l.Avatar.m_vAvatarLevel = Convert.ToInt32(txtPlayerLevel.Text);
+            
             await Resources.DatabaseManager.Save(l);
-            var title = "Finished!";
-            MessageBox.Show("Player has been saved!", title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Logger.Say("Player saved!");
             /* SAVE PLAYER */
         }
 
@@ -290,7 +296,7 @@ namespace UCS
             txtMintenance.Text = "0";
             txtDatabaseType.Text = "";
             txtPort.Text = "9339";
-            txtAdminMessage.Text = "Welcome to Ultrapower Clash Server v0.7.3.2 Modded By Naix";
+            txtAdminMessage.Text = "Welcome to Ultrapower Clash Server";
             txtLogLevel.Text = "0";
             txtClientVersion.Text = "8.709.16";
         }
@@ -370,7 +376,7 @@ namespace UCS
             doc.Save(path);
             var title = "Ultrapower Clash Server Manager GUI";
             var message = "Changes has been saved!";
-            MessageBox.Show(message, title, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Logger.Say(message);
         }
 
         /* END OF CONFIG EDITOR TAB*/

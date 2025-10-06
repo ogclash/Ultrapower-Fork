@@ -1,0 +1,45 @@
+2025-09-13         [RELEASE] Release of UCS-Reworked 1.2.0.3 (Phia)
+2025-09-12 2692f4e Update Projects.sln to Ultrapower Community.sln (sophia-bln)
+2025-09-12 252f7df Delete WebAPI.PNG (sophia-bln)
+2025-09-12 db69a36 Delete Screenshot_API.PNG (sophia-bln)
+2025-09-12 8e7df10 Delete 0732_Screenshot.PNG (sophia-bln)
+2025-09-12 a48136c Update README.md (sophia-bln)
+2025-09-13 5ba5f18 [TASK] too much to describe... 
+- fixed quick-army and added spell-support to it 
+- added movewholelayout to layout-editor so no more bugs can happen 
+- added battle-log 
+- fixed bugs 
+- added ddos-protection 
+- refactored/improved code 
+- added more depth to trophy simulation and added to some extend accurate tropy gain/loss 
+- added new command: /newaccount 
+- added loss of ammo during defends to make player reload defenses. 
+- fixed reloading all defenses of a type 
+- make upgrading walls with elixir possible - added support for tutorial 
+- added campain progression 
+(dprssdrainbow)
+2025-08-12 9a19b64 Update README.md (sophia-bln)
+
+2025-08-12         [RELEASE] Release of UCS-Reworked 1.1.0.0 (Phia)
+2025-08-12 f024b74 [TASK] refactor and improve code (dprssdrainbow)
+2025-08-12 9ea4c98 [TASK] fix another bug with clan-invites and make messages which are received while offline as new inbox messages and apply it only on new messsages after this update and currently only session-wise (no indicator for new messages after server restart) (dprssdrainbow)
+2025-08-12 a108e63 [TASK] fix íssue with clan-invites and add functional global reports even after game-restart (dprssdrainbow)
+2025-08-11 e609859 [TASK] fix some decoding issues (dprssdrainbow)
+2025-08-10 aee6c37 [TASK] improve code (dprssdrainbow)
+2025-08-09 f15bf63 [TASK] refactor and optimize code (dprssdrainbow)
+2025-08-09 361fec9 [TASK] change gameobjectmanager (dprssdrainbow)
+
+2025-08-09         [RELEASE] Release of UCS-Reworked 1.0.0.2 (Phia)
+2025-08-09 a5b1c18 [UPDATE] add new npc-levels so singpleplayer becomes native - refactor and improve code - update removeunitscommand to also remove alliance units and fix bugs (dprssdrainbow)
+
+2025-08-09         [RELEASE] Release of UCS-Reworked 1.0.0.1
+2025-08-08 46b13fb [TASK] create first release - refactor version-checker - improve challenges - fix bugs (dprssdrainbow)
+2025-08-06 dd8d41e [TASK] refactor code (dprssdrainbow)
+2025-08-06 857172c [TASK] too much too describe.... - fixed bugs - added mail-savings and fix issues related to mailing - added friendly challenges - added clan progression via donations (10 housingspace filled = 1 clan-xp) - fixed avatar encoding for profiledatamessage (dprssdrainbow)
+2025-08-03 beb7675 [TASK] fix shield calculation (dprssdrainbow)
+2025-08-03 c1ff633 [TASK] add clan-invites and message requester if clanjoin-request was declined (dprssdrainbow)
+2025-08-03 4d10ab2 [TASK] refactor code and make shields decrease their duration and fix some bugs (dprssdrainbow)
+2025-08-03 58f005b [TASK] re-enable ocstacle-manager and fix removing obstacles (wihout worker temporairly) (dprssdrainbow)
+2025-07-17 3f72dda [TASK] extend base config.ucs to prevent conflict while executing built solution (dprssdrainbow)
+2025-07-17 7c32905 Update README.md (sophia-bln)
+2025-07-17 f370b62 [TASK] inital commit: - fix bugs and send timeouts when chained-commands cant get executed // - fix player progressions // - add leaderboards and fix clan chat // change commands to be executed by everyone currently and add new commands and enhance some old ones </> (dprssdrainbow)

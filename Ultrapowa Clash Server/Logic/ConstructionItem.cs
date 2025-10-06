@@ -80,11 +80,22 @@ namespace UCS.Logic
             return result;
         }
 
-        public void FinishConstruction()
+        public void FinishConstruction(int id = 0)
         {
+            if (id != 0 && string.Equals(this.GetData().GetName(), "Alliance Castle"))
+            {
+                Avatar.Avatar.IncrementAllianceCastleLevel();
+                Building a = (Building)Avatar.GameObjectManager.GetGameObjectByID(id);
+                BuildingData al = a.GetBuildingData();
+                Avatar.Avatar.SetAllianceCastleTotalCapacity(
+                    al.GetUnitStorageCapacity(Avatar.Avatar.GetAllianceCastleLevel()));
+            }
+            else if (string.Equals(this.GetData().GetName(), "Town Hall"))
+                Avatar.Avatar.IncrementTownHallLevel();
+
+            SetUpgradeLevel(GetUpgradeLevel() + 1);
             m_vIsConstructing = false;
             m_vLevel.WorkerManager.DeallocateWorker(this);
-            SetUpgradeLevel(GetUpgradeLevel() + 1);
             if (GetResourceProductionComponent() != null)
             {
                 GetResourceProductionComponent().Reset();
@@ -102,6 +113,7 @@ namespace UCS.Logic
                 Avatar.Avatar.SetHeroHealth(hd, 0);
                 Avatar.Avatar.SetHeroState(hd, 3);
             }
+            Logger.Say($"Finished construction : {this.GetData().GetName()} ({id})");
         }
 
         public int GetBoostDuration()
@@ -173,6 +185,13 @@ namespace UCS.Logic
         public int GetRequiredTownHallLevelForUpgrade()
         {
             int upgradeLevel = Math.Min(UpgradeLevel + 1, GetConstructionItemData().GetUpgradeLevelCount() - 1);
+            int upgradeLevelTest = Math.Min(UpgradeLevel + 1, GetConstructionItemData().GetUpgradeLevelCount() - 1)-1;
+            int result = GetConstructionItemData().GetRequiredTownHallLevel(upgradeLevel);
+            int testresult = GetConstructionItemData().GetRequiredTownHallLevel(upgradeLevelTest);
+            if (result == testresult)
+            {
+                Logger.Say("Building is max");
+            }
             return GetConstructionItemData().GetRequiredTownHallLevel(upgradeLevel);
         }
 
@@ -287,6 +306,8 @@ namespace UCS.Logic
         public void SetUpgradeLevel(int level)
         {
             UpgradeLevel = level;
+            var ConstData = GetResourceProductionComponent();
+            //Logger.Say("Upgrade performed\n");
             if (GetConstructionItemData().IsTownHall())
             {
                 Avatar.Avatar.SetTownHallLevel(level);
@@ -295,6 +316,7 @@ namespace UCS.Logic
             {
                 if (GetUnitStorageComponent(true) != null)
                 {
+                    //Avatar.GetComponentManager().reloadComponents(Avatar);
                     var data = (BuildingData) GetData();
                     if (data.GetUnitStorageCapacity(level) > 0)
                     {
@@ -316,17 +338,11 @@ namespace UCS.Logic
 
         public void SpeedUpConstruction()
         {
-            if (IsConstructing())
-            {
-                ClientAvatar ca      = Avatar.Avatar;
-                int remainingSeconds = m_vTimer.GetRemainingSeconds(m_vLevel.Avatar.LastTickSaved);
-                int cost             = GamePlayUtil.GetSpeedUpCost(remainingSeconds);
-                if (ca.HasEnoughDiamonds(cost))
-                {
-                    ca.UseDiamonds(cost);
-                    FinishConstruction();
-                }
-            }
+            //FinishConstruction();
+            ClientAvatar ca      = Avatar.Avatar;
+            int remainingSeconds = m_vTimer.GetRemainingSeconds(m_vLevel.Avatar.LastTickSaved);
+            int cost             = GamePlayUtil.GetSpeedUpCost(remainingSeconds);
+            ca.UseDiamonds(cost);
         }
 
         public void StartConstructing(int newX, int newY)

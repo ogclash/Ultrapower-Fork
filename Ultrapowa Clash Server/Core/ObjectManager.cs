@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using UCS.Core.Settings;
 using UCS.Files;
 using UCS.Logic;
 using Timer = System.Threading.Timer;
@@ -21,6 +23,7 @@ namespace UCS.Core
         public static bool m_vTimerCanceled;
         public static Timer TimerReferenceRedis;
         public static Timer TimerReferenceMysql;
+        public static Timer TimerReferenceOfflineTick;
         public static Dictionary<int, string> NpcLevels;
         public static Dictionary<int, string> m_vRandomBases;
         public static FingerPrint FingerPrint;
@@ -43,7 +46,7 @@ namespace UCS.Core
             m_vAvatarSeed          = MaxPlayerID;
             m_vAllianceSeed        = MaxAllianceID;
 
-            using (StreamReader sr = new StreamReader(@"Gamefiles/starting_home.json"))
+            using (StreamReader sr = new StreamReader(@"Gamefiles/starting_home_test.json"))
             {
                 m_vHomeDefault     = sr.ReadToEnd();
             }
@@ -51,9 +54,38 @@ namespace UCS.Core
             LoadNpcLevels();
             //LoadRandomBase(); // Useless atm
 
-            TimerReferenceRedis = new Timer(SaveRedis, null, 10000, 40000);
-            TimerReferenceMysql = new Timer(SaveMysql, null, 40000, 27000);
+            if (!Constants.DebugMode)
+            {
+                TimerReferenceRedis = new Timer(SaveRedis, null, 10000, 40000);
+                TimerReferenceMysql = new Timer(SaveMysql, null, 40000, 27000);
+                TimerReferenceOfflineTick = new Timer(StartOfflineTick, null, 10000, 1000);
+            }
             Say($"UCS Database has been succesfully loaded. ({Convert.ToInt32(MaxAllianceID + MaxPlayerID)} Tables)");
+        }
+
+        public static DatabaseManager getDatabaseManager()
+        {
+            return m_vDatabase;
+        }
+        
+        private async void OfflineTick(List<Level> avatars)
+        {
+            foreach (Level pl in avatars)
+            {
+                try
+                {
+                    await Task.Run(() => pl.Tick(true));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Write($"RunTime-Error: "+ex);
+                }
+            }
+        }
+
+        private void StartOfflineTick(object state)
+        {
+            OfflineTick(ResourcesManager.m_vInMemoryLevels.Values.ToList());
         }
 
         private static void SaveRedis(object state)
@@ -125,16 +157,27 @@ namespace UCS.Core
             int index = new Random().Next(0, ResourcesManager.m_vInMemoryLevels.Count);
             return ResourcesManager.m_vInMemoryLevels.Values.ToList().ElementAt(index);
         }
+        
+        public static Level GetRandomOfflinePlayer()
+        {
+            int index = new Random().Next(0, ResourcesManager.m_vInMemoryLevels.Count);
+            Level defender = ResourcesManager.m_vInMemoryLevels.Values.ToList().ElementAt(index);
+            while (ResourcesManager.IsPlayerOnline(defender))
+            {
+                index = new Random().Next(0, ResourcesManager.m_vInMemoryLevels.Count);
+                defender = ResourcesManager.m_vInMemoryLevels.Values.ToList().ElementAt(index);
+            }
+            return defender;
+        }
 
         public static void LoadNpcLevels()
         {
             int Count = 0;
             NpcLevels.Add(17000000, new StreamReader(@"Gamefiles/level/NPC/tutorial_npc.json").ReadToEnd());
             NpcLevels.Add(17000001, new StreamReader(@"Gamefiles/level/NPC/tutorial_npc2.json").ReadToEnd());
-
             for (int i = 2; i < 50; i++)
             {
-                using (StreamReader sr = new StreamReader(@"Gamefiles/level/NPC/level" + (i + 1) + ".json"))
+                using (StreamReader sr = new StreamReader(@"Gamefiles/level/NPC/npc" + (Count + 1) + ".json"))
                 {
                     NpcLevels.Add(i + 17000000, sr.ReadToEnd());
                 }

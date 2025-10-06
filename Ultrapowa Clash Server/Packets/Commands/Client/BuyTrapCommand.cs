@@ -1,7 +1,5 @@
-﻿using System.IO;
-using UCS.Core;
+﻿using UCS.Core;
 using UCS.Files.Logic;
-using UCS.Helpers;
 using UCS.Helpers.Binary;
 using UCS.Logic;
 
@@ -31,14 +29,12 @@ namespace UCS.Packets.Commands.Client
 
             if (ca.HasEnoughResources(td.GetBuildResource(0), td.GetBuildCost(0)))
             {
-                if (this.Device.Player.HasFreeWorkers())
-                {
-                    var rd = td.GetBuildResource(0);
-                    ca.CommodityCountChangeHelper(0, rd, -td.GetBuildCost(0));
+                var rd = td.GetBuildResource(0);
+                ca.CommodityCountChangeHelper(0, rd, -td.GetBuildCost(0));
 
-                    t.StartConstructing(X, Y);
-                    this.Device.Player.GameObjectManager.AddGameObject(t);
-                }
+                t.StartConstructing(X, Y);
+                this.Device.Player.GameObjectManager.AddGameObject(t);
+                
             }
         }
 

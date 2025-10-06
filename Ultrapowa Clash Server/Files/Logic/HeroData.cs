@@ -130,6 +130,7 @@ namespace UCS.Files.Logic
         public string InfoTID { get; set; }
 
         public bool IsFlying { get; set; }
+        
 
         public int MaxSearchRadiusForDefender { get; set; }
 
@@ -207,6 +208,11 @@ namespace UCS.Files.Logic
 
         public int WakeUpSpeed { get; set; }
 
+
+        public string getAbilityAffectsCharacter()
+        {
+            return TID;
+        }
         public override int GetCombatItemType() => 2;
 
         public int GetRequiredTownHallLevel(int level) => RequiredTownHallLevel[level];

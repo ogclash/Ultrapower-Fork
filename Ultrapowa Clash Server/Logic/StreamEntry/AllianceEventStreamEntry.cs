@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using UCS.Helpers;
 using UCS.Helpers.List;
 
 namespace UCS.Logic.StreamEntry
 {
     internal class AllianceEventStreamEntry : StreamEntry
     {
-        long m_vAvatarId;
+        internal long m_vAvatarId;
         internal string m_vAvatarName;
         internal int EventType;
 

@@ -17,12 +17,13 @@ namespace UCS.Packets.GameOpCommands
 
         public override void Execute(Level level)
         {
-            if (level.Avatar.AccountPrivileges >= GetRequiredAccountPrivileges())
+            if (GetRequiredAccountPrivileges())
             {
                 foreach (var onlinePlayer in ResourcesManager.m_vOnlinePlayers)
                 {
                     var p = new ShutdownStartedMessage(onlinePlayer.Client) {Code = 5};
                     p.Send();
+                    //Task.Delay(300000).ContinueWith(_ => UCSControl.UCSRestart());
                 }
             }
             else

@@ -1,10 +1,10 @@
 ﻿using System;
-using System.IO;
+using System.Linq;
 using UCS.Core;
 using UCS.Core.Network;
-using UCS.Helpers;
 using UCS.Helpers.Binary;
 using UCS.Logic;
+using UCS.Logic.AvatarStreamEntry;
 using UCS.Logic.StreamEntry;
 using UCS.Packets.Commands.Server;
 using UCS.Packets.Messages.Server;
@@ -28,7 +28,7 @@ namespace UCS.Packets.Messages.Client
             this.Choice    = this.Reader.ReadByte();
         }
 
-        internal async void Process()
+        internal async override void Process()
         {
             try
             {
@@ -37,6 +37,10 @@ namespace UCS.Packets.Messages.Client
                 Level requester = await ResourcesManager.GetPlayer(message.SenderID);
                 if (Choice == 1)
                 {
+                    if (requester.Avatar.AllianceId != 0)
+                    {
+                        return;
+                    }
                     if (!a.IsAllianceFull())
                     {
                         requester.Avatar.AllianceId = a.m_vAllianceId;
@@ -50,10 +54,11 @@ namespace UCS.Packets.Messages.Client
                         e.SetState(2);
 
                         AllianceEventStreamEntry eventStreamEntry = new AllianceEventStreamEntry();
-                        eventStreamEntry.ID = a.m_vChatMessages.Count + 1;
+                        eventStreamEntry.ID = a.m_vChatMessages.Count > 0 ? a.m_vChatMessages.Last().ID + 1 : 1;
                         eventStreamEntry.SetSender(requester.Avatar);
                         eventStreamEntry.EventType = 2;
-
+                        eventStreamEntry.m_vAvatarName = "Clan Member";
+                        eventStreamEntry.m_vAvatarId = eventStreamEntry.SenderID;
                         a.AddChatMessage(eventStreamEntry);
 
                         foreach (AllianceMemberEntry op in a.GetAllianceMembers())
@@ -80,6 +85,7 @@ namespace UCS.Packets.Messages.Client
                             new AvailableServerCommandMessage(requester.Client, d.Handle()).Send();
 
                             new AllianceStreamMessage(requester.Client, a).Send();
+                            requester.Avatar.SendCLanMessagesToOldClient(requester.Client);
                         }
                     }
                 }
@@ -97,6 +103,19 @@ namespace UCS.Packets.Messages.Client
                             new AllianceStreamEntryMessage(player.Client) { StreamEntry = e }.Send();
                         }
                     }
+                    var alliance = ObjectManager.GetAlliance(this.Device.Player.Avatar.AllianceId);
+                    var allianceDeclineMessage = new AllianceDeclineStreamEntry();
+                    allianceDeclineMessage.SetSender(Device.Player.Avatar);
+                    allianceDeclineMessage.ID = (int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                    allianceDeclineMessage.SenderId = Device.Player.Avatar.UserId;
+                    allianceDeclineMessage.IsNew = 2;
+                    allianceDeclineMessage.AllianceId = (alliance.m_vAllianceId);
+                    allianceDeclineMessage.AllianceBadgeData = (alliance.m_vAllianceBadgeData);
+                    allianceDeclineMessage.AllianceName = (alliance.m_vAllianceName);
+                    var p = new AvatarStreamEntryMessage(requester.Client);
+                    p.SetAvatarStreamEntry(allianceDeclineMessage);
+                    p.SetTargetAcc(requester);
+                    p.Send();
                 }
             } catch (Exception) { }
         }

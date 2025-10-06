@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UCS.Core;
@@ -22,6 +21,8 @@ namespace UCS.Packets.Messages.Server
 
             foreach(Alliance alliance in ObjectManager.GetInMemoryAlliances().OrderByDescending(t => t.m_vScore))
             {
+                if (alliance.m_vAllianceMembers.Count() == 0)
+                    continue;
                 if (i >= 100)
                     break;
                 packet1.AddLong(alliance.m_vAllianceId);

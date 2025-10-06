@@ -19,6 +19,14 @@ namespace UCS.Packets.Commands.Client
 
         internal override async void Process()
         {
+            if (this.Device.AttackInfo == null)
+            {
+                this.Device.AttackInfo = "multiplayer";
+            }
+            if (this.Device.AttackInfo == "challenge")
+            {
+                return;
+            }
             ClientAvatar _Player = this.Device.Player.Avatar;
 
             if (_Player != null)

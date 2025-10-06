@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UCS.Helpers;
 using UCS.Helpers.List;
 
 namespace UCS.Logic.AvatarStreamEntry
@@ -19,6 +18,7 @@ namespace UCS.Logic.AvatarStreamEntry
         internal int m_vSenderLeagueId;
         internal int m_vSenderLevel;
         internal string m_vSenderName;
+        internal bool wasOnline = true;
 
         public virtual byte[] Encode()
         {
